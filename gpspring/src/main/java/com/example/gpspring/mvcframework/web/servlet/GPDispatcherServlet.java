@@ -268,7 +268,7 @@ public class GPDispatcherServlet extends HttpServlet {
     }
 
     private void initHandlerMappings(GPApplicationContext context) {
-        this.handlerMappings.add(new GPRequestMappingHandlerMapping());
+        this.handlerMappings.add(new GPRequestMappingHandlerMapping(context));
     }
 
     private void initThemeResolver(GPApplicationContext context) {

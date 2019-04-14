@@ -6,10 +6,11 @@ import lombok.Data;
 public class GPBeanDefinition {
     private String beanClassName;
     private boolean lazyInit = false;
-    private String factoryBeanName;
+    private Class<?> beanClass;
+//    private String factoryBeanName;
 
-    public GPBeanDefinition(String factoryBeanName, String beanClassName) {
+    public GPBeanDefinition(String beanClassName, Class<?> beanClass) {
         this.beanClassName = beanClassName;
-        this.factoryBeanName = factoryBeanName;
+        this.beanClass = beanClass;
     }
 }

@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Stream;
 
 import static java.beans.Introspector.decapitalize;
 
@@ -23,8 +22,6 @@ public class GPBeanDefinitionReader {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        doScan(config.getProperty(SCAN_PACKAGE));
     }
 
     private void doScan(String scanPackage) {
@@ -43,7 +40,10 @@ public class GPBeanDefinitionReader {
         }
     }
 
-    public List<GPBeanDefinition> loadBeanDefinitions() throws ClassNotFoundException {
+    public List<GPBeanDefinition> scanAndRegister(GPDefaultListableBeanFactory beanFactory) throws ClassNotFoundException {
+
+        doScan(config.getProperty(SCAN_PACKAGE));
+
         List<GPBeanDefinition> beanDefinitions = new ArrayList<>();
         for (String beanClassName : beanClassNames) {
             Class<?> beanClass = Class.forName(beanClassName);
@@ -51,17 +51,10 @@ public class GPBeanDefinitionReader {
                 continue;
             }
 
-            beanDefinitions.add(doCreateBeanDefinition(decapitalize(beanClass.getSimpleName()), beanClassName));
-
-            Class<?>[] interfaces = beanClass.getInterfaces();
-            Stream.of(interfaces).forEach((item)->{
-                beanDefinitions.add(doCreateBeanDefinition(item.getName(), beanClassName));
-            });
+            String beanName = decapitalize(beanClass.getSimpleName());
+            beanFactory.getBeanDefinitionMap().putIfAbsent(beanName, new GPBeanDefinition(beanClassName, beanClass));
+            beanFactory.getBeanDefinitionNames().add(beanName);
         }
         return beanDefinitions;
-    }
-
-    private GPBeanDefinition doCreateBeanDefinition(String factoryBeanName, String beanClassName) {
-        return new GPBeanDefinition(factoryBeanName, beanClassName);
     }
 }

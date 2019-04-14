@@ -9,6 +9,7 @@ import com.example.gpspring.mvcframework.beans.support.GPDefaultListableBeanFact
 import com.example.gpspring.mvcframework.context.support.GPAbstractApplicationContext;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,9 +80,12 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
                 String autowiredBeanName = autowired.value();
                 Object autowiredBean = null;
                 if (autowiredBeanName.trim().isEmpty()) {
-                    autowiredBean = this.singletonObjects.get(field.getType().getName());
-                } else {
-                    autowiredBean = this.singletonObjects.get(autowiredBeanName);
+                    autowiredBeanName = resolveDependency(field.getType());
+                }
+                try {
+                    autowiredBean = getBean(autowiredBeanName);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 if (autowiredBean == null) {
                     throw new RuntimeException("autowire a nonexistent bean");
@@ -96,6 +100,17 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
         });
     }
 
+    private String resolveDependency(Class<?> type) {
+        for (Map.Entry<String, GPBeanDefinition> entry : this.beanFactory.getBeanDefinitionMap().entrySet()) {
+            String beanName = entry.getKey();
+            GPBeanDefinition bd = entry.getValue();
+            if (type.isAssignableFrom(bd.getBeanClass())) {
+                return beanName;
+            }
+        }
+        return null;
+    }
+
     private GPBeanWrapper createBeanInstance(String beanName, GPBeanDefinition beanDefinition, Object[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         String beanClassName = beanDefinition.getBeanClassName();
         Class<?> beanClass = Class.forName(beanClassName);
@@ -106,9 +121,10 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
     @Override
     protected void refresh() {
         try {
+            // 加载beanDefinitions，生成beanDefinitionMap
             refreshBeanFactory();
 
-            // 4. 非lazyInit类初始化
+            // 非lazyInit singleton实例化
             instantiateSingletons(beanFactory);
         } catch (Exception e) {
             e.printStackTrace();
@@ -122,8 +138,7 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
     }
 
     private void loadBeanDefinitions(GPDefaultListableBeanFactory beanFactory) throws ClassNotFoundException {
-        List<GPBeanDefinition> beanDefinitions = new GPBeanDefinitionReader(configLocation).loadBeanDefinitions();
-        doRegisterBeanDefinition(beanFactory, beanDefinitions);
+        new GPBeanDefinitionReader(configLocation).scanAndRegister(beanFactory);
     }
 
     private void instantiateSingletons(GPDefaultListableBeanFactory beanFactory) {
@@ -138,10 +153,14 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
         });
     }
 
-    private void doRegisterBeanDefinition(GPDefaultListableBeanFactory beanFactory, List<GPBeanDefinition> beanDefinitions) {
-        Map<String, GPBeanDefinition> beanDefinitionMap = beanFactory.getBeanDefinitionMap();
-        beanDefinitions.forEach((beanDef) -> {
-            beanDefinitionMap.putIfAbsent(beanDef.getFactoryBeanName(), beanDef);
+    @Override
+    public String[] getBeanNamesForType(Class<?> type) {
+        List<String> beanNames = new ArrayList<>();
+        this.singletonObjects.forEach((beanName, bean)->{
+            if (bean.getClass().isAssignableFrom(type)) {
+                beanNames.add(beanName);
+            }
         });
+        return (String[]) beanNames.toArray();
     }
 }
