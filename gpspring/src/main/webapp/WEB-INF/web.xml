@@ -6,7 +6,7 @@
   <display-name>Archetype Created Web Application</display-name>
   <servlet>
     <servlet-name>gpdispatcher</servlet-name>
-    <servlet-class>com.example.gpspring.mvcframework.v3.servlet.GpDispatcherServlet</servlet-class>
+    <servlet-class>com.example.gpspring.mvcframework.web.servlet.GPDispatcherServlet</servlet-class>
     <init-param>
       <param-name>contextConfigLocation</param-name>
       <param-value>application.properties</param-value>

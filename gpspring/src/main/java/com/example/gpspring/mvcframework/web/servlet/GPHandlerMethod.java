@@ -15,8 +15,6 @@ import java.util.Map;
 public class GPHandlerMethod {
     private Object bean;
 
-    private GPBeanFactory beanFactory;
-
     private Class<?> beanType;
 
     private Method method;
@@ -27,6 +25,13 @@ public class GPHandlerMethod {
      * 请求参数名->方法参数位置
      */
     private Map<String, Integer> paramIndexMapping = new HashMap<>();
+
+    public GPHandlerMethod(Object bean, Class<?> beanType, Method method) {
+        this.bean = bean;
+        this.beanType = beanType;
+        this.method = method;
+        initParamIndexMapping();
+    }
 
     private void initParamIndexMapping() {
         Parameter[] parameters = method.getParameters();

@@ -122,11 +122,11 @@ public class GPDispatcherServlet extends HttpServlet {
 //                e.printStackTrace();
 //            }
 //        }
-        if (mv == null) {
-            resp.getWriter().write("404");
-            return;
-        }
-        resp.getWriter().write(mv.getModel().toString());
+//        if (mv == null) {
+//            resp.getWriter().write("404");
+//            return;
+//        }
+//        resp.getWriter().write(mv.getModel().toString());
     }
 
     /**

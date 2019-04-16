@@ -6,5 +6,5 @@ package com.example.gpspring.mvcframework.context.support;
 public abstract class GPAbstractApplicationContext {
     protected void refresh(){}
 
-    public abstract String[] getBeanNamesForType(Class<?> type);
+    public abstract String[] getBeanNames(Class<?> type);
 }

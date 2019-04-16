@@ -7,6 +7,9 @@ import com.example.gpspring.mvcframework.web.servlet.GPModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
+import java.util.Map;
+
+import static jdk.nashorn.api.scripting.ScriptUtils.convert;
 
 public class GPRequestMappingHandlerAdapter implements GPHandlerAdapter {
     /**
@@ -42,15 +45,32 @@ public class GPRequestMappingHandlerAdapter implements GPHandlerAdapter {
     @Override
     public GPModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 1. 请求参数转换成方法参数
-        Object[] args = null;
-
         // 2. 方法调用
         GPHandlerMethod handlerMethod = (GPHandlerMethod) handler;
-        Object result = handlerMethod.getMethod().invoke(handlerMethod.getBean(), args);
-        if (result instanceof GPModelAndView) {
-            return (GPModelAndView) result;
-        }
+        Map<String, String[]> requestParams = request.getParameterMap();
+        Object[] args = getMethodArgsFromRequestParams(handlerMethod, requestParams, request, response);
 
-        return null;
+        Object result = handlerMethod.getMethod().invoke(handlerMethod.getBean(), args);
+        response.getWriter().write(result.toString());
+        response.getWriter().flush();
+        return new GPModelAndView();
+    }
+
+    private Object[] getMethodArgsFromRequestParams(GPHandlerMethod handler, Map<String, String[]> requestParams, HttpServletRequest request, HttpServletResponse response) {
+        // 请求参数名->方法参数index
+        Map<String, Integer> paramIndex = handler.getParamIndexMapping();
+        Class<?>[] paramTypes = handler.getParamTypes();
+        Object[] args = new Object[paramIndex.size()];
+        for (Map.Entry<String, Integer> entry : paramIndex.entrySet()) {
+            Integer index = entry.getValue();
+            if (entry.getKey().equals(HttpServletRequest.class.getName())) {
+                args[index] = request;
+            } else if (entry.getKey().equals(HttpServletResponse.class.getName())) {
+                args[index] = response;
+            } else {
+                args[index] = convert(String.join(",", requestParams.get(entry.getKey())), paramTypes[index]);
+            }
+        }
+        return args;
     }
 }

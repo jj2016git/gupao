@@ -7,7 +7,7 @@ public class Test {
         GPApplicationContext context = new GPApplicationContext("classpath:application.properties");
         Object object = null;
         try {
-            object = context.getBean("demoController");
+            object = context.getBean("AService");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -13,21 +13,20 @@ import java.util.stream.Stream;
 public class GPRequestMappingHandlerMapping implements GPHandlerMapping {
 
     private final GPApplicationContext context;
+    private Map<String, GPHandlerMethod> urlHandlerMapping = new HashMap<>();
 
     public GPRequestMappingHandlerMapping(GPApplicationContext context) {
         this.context = context;
         initHandlerMethods();
     }
 
-    private Map<String, GPHandlerMethod> urlHandlerMapping = new HashMap<>();
-
     /**
      * 建立url与method的映射关系
      */
     private void initHandlerMethods() {
-        String[] beanNames = context.getBeanNamesForType(Object.class);
+        String[] beanNames = context.getBeanNames(Object.class);
 
-        Stream.of(beanNames).forEach((beanName)->{
+        for (String beanName : beanNames){
             Object bean = null;
             try {
                 bean = context.getBean(beanName);
@@ -43,17 +42,17 @@ public class GPRequestMappingHandlerMapping implements GPHandlerMapping {
                 }
 
                 Method[] methods = type.getMethods();
-                for (Method method:
-                     methods) {
+                for (Method method : methods) {
                     String methodUrl = "";
                     if (method.isAnnotationPresent(GPRequestMapping.class)) {
                         GPRequestMapping requestMapping = method.getAnnotation(GPRequestMapping.class);
                         methodUrl = requestMapping.value();
                     }
-                    urlHandlerMapping.putIfAbsent(baseUrl + methodUrl, new GPHandlerMethod());
+                    urlHandlerMapping.putIfAbsent(baseUrl + methodUrl, new GPHandlerMethod(bean, type, method));
                 }
             }
-        });
+        }
+        System.out.println(urlHandlerMapping);
     }
 
 
@@ -71,10 +70,6 @@ public class GPRequestMappingHandlerMapping implements GPHandlerMapping {
         String contextPath = request.getContextPath();
         url = url.replaceAll(contextPath, "").replaceAll("/+", "/");
 
-
-        // 参数映射
-        GPHandlerMethod handlerMethod = this.urlHandlerMapping.get(url);
-
-        return handlerMethod;
+        return this.urlHandlerMapping.get(url);
     }
 }
