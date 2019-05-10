@@ -6,7 +6,6 @@ import com.example.gpspring.mvcframework.web.servlet.GPModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 import static jdk.nashorn.api.scripting.ScriptUtils.convert;
@@ -51,9 +50,10 @@ public class GPRequestMappingHandlerAdapter implements GPHandlerAdapter {
         Object[] args = getMethodArgsFromRequestParams(handlerMethod, requestParams, request, response);
 
         Object result = handlerMethod.getMethod().invoke(handlerMethod.getBean(), args);
-        response.getWriter().write(result.toString());
-        response.getWriter().flush();
-        return new GPModelAndView();
+        if (result instanceof GPModelAndView) {
+            return (GPModelAndView) result;
+        }
+        return null;
     }
 
     private Object[] getMethodArgsFromRequestParams(GPHandlerMethod handler, Map<String, String[]> requestParams, HttpServletRequest request, HttpServletResponse response) {

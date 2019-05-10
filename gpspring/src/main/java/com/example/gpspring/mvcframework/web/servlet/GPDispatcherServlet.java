@@ -85,6 +85,9 @@ public class GPDispatcherServlet extends HttpServlet {
 
     private void doDispatch(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         Object handler = getHandler(req);
+        if (handler == null) {
+            processDispatchResult(new GPModelAndView("404"), req, resp);
+        }
 
         GPHandlerAdapter ha = getHandlerAdapter(handler);
 
@@ -114,19 +117,19 @@ public class GPDispatcherServlet extends HttpServlet {
 
     private void processDispatchResult(GPModelAndView mv, HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-//        for (GPViewResolver viewResolver : this.viewResolvers) {
-//            try {
-//                GPView view = viewResolver.resolveViewName(mv.getView().toString(), null);
-//                view.render(mv.getModel(), req, resp);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        if (mv == null) {
-//            resp.getWriter().write("404");
-//            return;
-//        }
-//        resp.getWriter().write(mv.getModel().toString());
+        for (GPViewResolver viewResolver : this.viewResolvers) {
+            try {
+                GPView view = viewResolver.resolveViewName(mv.getViewName(), null);
+                view.render(mv.getModel(), req, resp);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (mv == null) {
+            resp.getWriter().write("404");
+            return;
+        }
+        resp.getWriter().write(mv.getModel().toString());
     }
 
     /**

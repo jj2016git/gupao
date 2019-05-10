@@ -1,13 +1,16 @@
 package com.example.gpspring.mvcframework.context;
 
 import com.example.gpspring.mvcframework.annotation.GPAutowired;
+import com.example.gpspring.mvcframework.aop.config.GPAopConfig;
 import com.example.gpspring.mvcframework.beans.GPBeanFactory;
 import com.example.gpspring.mvcframework.beans.GPBeanWrapper;
 import com.example.gpspring.mvcframework.beans.config.GPBeanDefinition;
+import com.example.gpspring.mvcframework.beans.support.GPAdvisedSupport;
 import com.example.gpspring.mvcframework.beans.support.GPBeanDefinitionReader;
 import com.example.gpspring.mvcframework.beans.support.GPDefaultListableBeanFactory;
 import com.example.gpspring.mvcframework.context.support.GPAbstractApplicationContext;
 
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,9 +50,11 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
 
     private String configLocation;
     private GPDefaultListableBeanFactory beanFactory;
+    private GPBeanDefinitionReader reader;
 
     public GPApplicationContext(String configLocation) {
         this.configLocation = configLocation;
+        this.reader = new GPBeanDefinitionReader(configLocation);
         this.refresh();
     }
 
@@ -115,8 +120,13 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
      * @return
      */
     private Object initializeBean(String beanName, Object bean, GPBeanDefinition beanDefinition) {
+        Object wrappedBean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+        return wrappedBean;
+    }
 
-        return bean;
+    private Object applyBeanPostProcessorsAfterInitialization(Object bean, String beanName) {
+
+
     }
 
     private void populateBean(String beanName, GPBeanDefinition beanDefinition, GPBeanWrapper instanceWrapper) {
@@ -184,10 +194,22 @@ public class GPApplicationContext extends GPAbstractApplicationContext implement
     private void refreshBeanFactory() throws ClassNotFoundException {
         this.beanFactory = new GPDefaultListableBeanFactory();
         loadBeanDefinitions(this.beanFactory);
+        initAopConfig();
+    }
+
+    private GPAdvisedSupport initAopConfig() throws IllegalAccessException {
+        Properties properties = this.reader.getConfig();
+        GPAopConfig aopConfig = new GPAopConfig();
+        Field[] fields = GPAopConfig.class.getDeclaredFields();
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            field.set(aopConfig, properties.getProperty(fieldName));
+        }
+        return new GPAdvisedSupport(aopConfig);
     }
 
     private void loadBeanDefinitions(GPDefaultListableBeanFactory beanFactory) throws ClassNotFoundException {
-        new GPBeanDefinitionReader(configLocation).scanAndRegister(beanFactory);
+        reader.scanAndRegister(beanFactory);
     }
 
     private void instantiateSingletons(GPDefaultListableBeanFactory beanFactory) {

@@ -1,14 +1,17 @@
 package com.example.gpspring.mvcframework.web.servlet;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.Map;
 
 @Data
+@AllArgsConstructor
 public class GPModelAndView {
-    /** View instance or view name String */
-    private Object view;
+    private String viewName;
+    private Map<String,?> model;
 
-    /** Model Map */
-    private Map<String, Object> model;
+    public GPModelAndView(String viewName) {
+        this.viewName = viewName;
+    }
 }
