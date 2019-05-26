@@ -1,3 +1,5 @@
+package producer_consumer;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

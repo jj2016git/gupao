@@ -1,3 +1,5 @@
+package producer_consumer;
+
 import java.util.concurrent.BlockingQueue;
 
 public class Consumer implements Runnable {
