@@ -16,6 +16,7 @@
         <module>factory</module>
         <module>strategy</module>
         <module>templatemethod</module>
+        <module>chain-of-responsibility</module>
     </modules>
 
 
